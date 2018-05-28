@@ -8,8 +8,8 @@ C:\Users\user\source\repos\SendMail\SendMail\bin\Debug\SendMail.exe
 C:\Users\user\source\repos\SendMail\SendMail\bin\Debug\SendMail.pdb
 C:\Users\user\source\repos\SendMail\SendMail\obj\Debug\SendMail.exe
 C:\Users\user\source\repos\SendMail\SendMail\obj\Debug\SendMail.pdb
-C:\Users\user\source\repos\SendMail\SendMail\obj\Debug\SendMail.Form2.resources
-C:\Users\user\source\repos\SendMail\SendMail\bin\Debug\EntityFramework.dll
-C:\Users\user\source\repos\SendMail\SendMail\bin\Debug\EntityFramework.SqlServer.dll
-C:\Users\user\source\repos\SendMail\SendMail\bin\Debug\EntityFramework.xml
-C:\Users\user\source\repos\SendMail\SendMail\bin\Debug\EntityFramework.SqlServer.xml
+C:\Users\user\source\repos\SendMail\SendMail\bin\Debug\MetroFramework.Design.dll
+C:\Users\user\source\repos\SendMail\SendMail\bin\Debug\MetroFramework.dll
+C:\Users\user\source\repos\SendMail\SendMail\bin\Debug\MetroFramework.Fonts.dll
+C:\Users\user\source\repos\SendMail\SendMail\obj\Debug\SendMail.csproj.ResolveComReference.cache
+C:\Users\user\source\repos\SendMail\SendMail\obj\Debug\SendMail.UF_Outlook.resources
