@@ -14,7 +14,10 @@ using MetroFramework;
 using Outlook = Microsoft.Office.Interop.Outlook;
 using Office = Microsoft.Office.Core;
 using OutlookApp = Microsoft.Office.Interop.Outlook.Application;
-
+using System.Runtime.InteropServices;
+using System.Net;
+using System.Net.Mail;
+using System.Collections;
 
 
 namespace SendMail
@@ -28,7 +31,7 @@ namespace SendMail
             AddTab();
             GetFontCollection();
             PopulateFontSize();
-            
+
         }
 
         private void Bttn_Przycisk_Click(object sender, EventArgs e)
@@ -41,27 +44,31 @@ namespace SendMail
             mailItem.To = @"frankowski.jaroslaw2@gmail.com";
             mailItem.CC = "";
             mailItem.Subject = "Test";
-            //mailItem.HTMLBody = richTextBox1.Text;
+            mailItem.BodyFormat = Outlook.OlBodyFormat.olFormatHTML;
+            //Copy();
+            //mailItem.Body = GetCurrentDocument.Text ;
+            mailItem.Body = GetCurrentDocument.Text;
 
+            //GetCurrentDocument.Copy();
+            
+            //Outlook.Attachment attachment = mailItem.Attachments.Add(@"C:\Users\user\Desktop\kosmos.jpg", Outlook.OlAttachmentType.olEmbeddeditem, null, "Some image display name");
 
-            Outlook.Attachment attachment = mailItem.Attachments.Add(@"C:\Users\user\Desktop\kosmos.jpg", Outlook.OlAttachmentType.olEmbeddeditem, null, "Some image display name");
+            //string imageCid = "kosmos.jpg";
 
-            string imageCid = "kosmos.jpg";
+            //attachment.PropertyAccessor.SetProperty(
+            //  "http://schemas.microsoft.com/mapi/proptag/0x3712001E"
+            // , imageCid
+            // );
 
-            attachment.PropertyAccessor.SetProperty(
-              "http://schemas.microsoft.com/mapi/proptag/0x3712001E"
-             , imageCid
-             );
-
-            mailItem.HTMLBody += String.Format(
-              "<body><img src=\"cid:{0}\"></body>"
-             , imageCid
-             );
+            //mailItem.HTMLBody += String.Format(
+            //  "<body><img src=\"cid:{0}\"></body>"
+            // , imageCid
+            // );
 
             mailItem.Display();
+            
 
-
-            MetroMessageBox.Show(this, "Cześć kotek ;*", "Aplikacja do wysyłania Mail", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            MetroMessageBox.Show(this, "Cześć kotek", "Aplikacja do wysyłania Mail", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
         }
 
@@ -74,14 +81,21 @@ namespace SendMail
 
         private void Bttn_Przycisk2_Click(object sender, EventArgs e)
         {
-            OutlookApp outlookApp = new OutlookApp();
-            Outlook.MailItem mailItem = outlookApp.CreateItem(Outlook.OlItemType.olMailItem);
-            mailItem.Subject = "This is the subject";
-            mailItem.HTMLBody = "<html><body>This is the <strong>funky</strong> message body</body></html>";
+            //OutlookApp outlookApp = new OutlookApp();
+            //Outlook.MailItem mailItem = outlookApp.CreateItem(Outlook.OlItemType.olMailItem);
+            //mailItem.Subject = "This is the subject";
+            //mailItem.HTMLBody = "<html><body>This is the <strong>funky</strong> message body</body></html>";
 
-            //Set a high priority to the message
-            mailItem.Importance = Outlook.OlImportance.olImportanceHigh;
-            mailItem.Display();
+            ////Set a high priority to the message
+            //mailItem.Importance = Outlook.OlImportance.olImportanceHigh;
+            //mailItem.Display();
+            //Rect rect;
+            //rect.Left = 10;
+            //rect.Top = 10;
+            //rect.Right = 10;
+            //rect.Bottom = 10;
+
+            //RichTextBoxMargin = rect;
 
         }
 
@@ -97,6 +111,13 @@ namespace SendMail
                 ContextMenuStrip = contextMenuStrip1
             };
 
+            //marginesy
+            RichTextBoxExtensions.SetInnerMargins(Body, 20, 15, 10, 10);
+            //Body.Cursor = 
+            //Body.MouseEnter += new EventHandler(button1_MouseMove);
+            //Body.MouseLeave += new EventHandler(button1_MouseMove);
+            Body.MouseMove += new MouseEventHandler(button1_MouseMove);
+            //System.Windows.Forms.MauseEventHandler
             TabCount += 1;
             string DocumentText = "Document " + TabCount;
             TabPage NewPage = new TabPage
@@ -107,6 +128,8 @@ namespace SendMail
             NewPage.Controls.Add(Body);
 
             tabControl1.TabPages.Add(NewPage);
+
+
         }
         private void RemoveTab()
         {
@@ -231,6 +254,11 @@ namespace SendMail
         }
         #endregion
         #region FontChanges
+
+        private void FontTextAlign(HorizontalAlignment align)
+        {
+            GetCurrentDocument.SelectionAlignment = align;
+        }
         private void FontSelection(FontStyle font)
         {
             FontStyle NewFS = GetCurrentDocument.SelectionFont.Style ^ font;
@@ -291,6 +319,31 @@ namespace SendMail
             GetCurrentDocument.SelectionFont = NewFont;
         }
         #endregion
+        #region Paragraph
+        private void ParagraphNew()
+        {
+            //bool IsBullet = GetCurrentDocument.SelectionBullet;
+            bool IsBullet = !GetCurrentDocument.SelectionBullet; // == true ? false : true;
+
+            if (IsBullet)
+            {
+                GetCurrentDocument.SelectionBullet = true;
+                GetCurrentDocument.SelectionIndent = 8;
+                GetCurrentDocument.SelectionHangingIndent = 3;
+                GetCurrentDocument.SelectionRightIndent = 12;
+                GetCurrentDocument.SelectionCharOffset = 11;
+            }
+            else
+            {
+                GetCurrentDocument.SelectionBullet = false;
+                GetCurrentDocument.SelectionIndent = 0;
+                GetCurrentDocument.SelectionHangingIndent = 0;
+                GetCurrentDocument.SelectionRightIndent = 0;
+                GetCurrentDocument.SelectionCharOffset = 0;
+            }
+
+        }
+        #endregion
         #endregion
 
         #region Properties
@@ -298,159 +351,171 @@ namespace SendMail
         { get { return (RichTextBox)tabControl1.SelectedTab.Controls["Body"]; } }
 
         #endregion
+
         #region MyEvents
+
+        #region ControlStripLeft
 
 
         private void nowyToolStripButton1_Click(object sender, EventArgs e)
         {
             AddTab();
         }
-
         private void RemoveTabToolStripButton_Click(object sender, EventArgs e)
         {
             RemoveTab();
         }
-
-        private void toolStripMenuItem8_Click(object sender, EventArgs e)
-        {
-            RemoveAllTabs();
-        }
-
-        private void toolStripMenuItem9_Click(object sender, EventArgs e)
-        {
-            RemoveAllTabsButThis();
-        }
-
-        private void zapiszToolStripMenuItem_Click(object sender, EventArgs e)
+        private void zapiszToolStripButton1_Click(object sender, EventArgs e)
         {
             Save();
         }
-
-        private void zapiszjakoToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SaveAs();
-        }
-
-        private void otwórzToolStripMenuItem_Click(object sender, EventArgs e)
+        private void otwórzToolStripButton1_Click(object sender, EventArgs e)
         {
             Open();
         }
-
-        private void nowyToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            AddTab();
-        }
-
-        private void toolStripMenuItem1_Click(object sender, EventArgs e)
-        {
-            Undo();
-        }
-
-        private void toolStripMenuItem2_Click(object sender, EventArgs e)
-        {
-            Redo();
-        }
-
-        private void toolStripMenuItem3_Click(object sender, EventArgs e)
-        {
-            Cut();
-        }
-
-        private void toolStripMenuItem4_Click(object sender, EventArgs e)
-        {
-            GetCurrentDocument.Copy();
-        }
-
-        private void toolStripMenuItem5_Click(object sender, EventArgs e)
-        {
-            GetCurrentDocument.Paste();
-        }
-
-        private void cofnijToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Undo();
-        }
-
-        private void ponówToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Redo();
-        }
-
-        private void wytnijToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Cut();
-        }
-
-        private void kopiujToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Copy();
-        }
-
-        private void wklejToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            Paste();
-        }
-
-        private void zaznaczwszystkoToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            SelectAll();
-        }
-
         private void wytnijToolStripButton1_Click(object sender, EventArgs e)
         {
             Cut();
         }
-
         private void kopiujToolStripButton1_Click(object sender, EventArgs e)
         {
             Copy();
         }
-
         private void wklejToolStripButton1_Click(object sender, EventArgs e)
         {
             Paste();
         }
 
+        #endregion
+
+        #region ContextMenu
+        private void toolStripMenuItem4_Click(object sender, EventArgs e)
+        {
+            Copy();
+        }
+        private void toolStripMenuItem5_Click(object sender, EventArgs e)
+        {
+            Paste();
+        }
+        private void toolStripMenuItem8_Click(object sender, EventArgs e)
+        {
+            RemoveAllTabs();
+        }
+        private void toolStripMenuItem9_Click(object sender, EventArgs e)
+        {
+            RemoveAllTabsButThis();
+        }
+        private void toolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            Undo();
+        }
+        private void toolStripMenuItem2_Click(object sender, EventArgs e)
+        {
+            Redo();
+        }
+        private void toolStripMenuItem3_Click(object sender, EventArgs e)
+        {
+            Cut();
+        }
+        private void toolStripMenuItem6_Click(object sender, EventArgs e)
+        {
+            Save();
+        }
+        private void toolStripMenuItem7_Click(object sender, EventArgs e)
+        {
+            Close();
+        }
+        #endregion
+
+        #region MainMenuStripFile
+
+        private void zapiszToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Save();
+        }
+        private void zapiszjakoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SaveAs();
+        }
+        private void otwórzToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Open();
+        }
+        private void nowyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            AddTab();
+        }
+
+
+        #endregion
+
+        #region MainMenuStripEdit
+
+        private void cofnijToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Undo();
+        }
+        private void ponówToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Redo();
+        }
+        private void wytnijToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Cut();
+        }
+        private void kopiujToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Copy();
+        }
+        private void wklejToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Paste();
+        }
+        private void zaznaczwszystkoToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SelectAll();
+        }
+        #endregion
+
+        #region FontStyle
         private void toolStripButton1_Click(object sender, EventArgs e)
         {
             FontSelection(FontStyle.Bold);
         }
-
         private void toolStripButton2_Click(object sender, EventArgs e)
         {
             FontSelection(FontStyle.Italic);
         }
-
         private void toolStripButton3_Click(object sender, EventArgs e)
         {
             FontSelection(FontStyle.Underline);
         }
-
         private void toolStripButton4_Click(object sender, EventArgs e)
         {
             FontSelection(FontStyle.Strikeout);
         }
+        #endregion
 
+        #region FontSize
         private void toolStripButton5_Click(object sender, EventArgs e)
         {
             Upper();
         }
-
         private void toolStripButton6_Click(object sender, EventArgs e)
         {
             Lower();
         }
-
         private void toolStripButton7_Click(object sender, EventArgs e)
         {
             Increase();
         }
-
         private void toolStripButton8_Click(object sender, EventArgs e)
         {
             Decrease();
         }
+        #endregion
 
+        #region FontColor
         private void toolStripButton9_Click(object sender, EventArgs e)
         {
             FontForeColor();
@@ -460,16 +525,20 @@ namespace SendMail
         {
             FontHighlight();
         }
+        #endregion
+
+        #region ComboFontSize
         private void toolStripComboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             FontChange();
         }
-
         private void toolStripComboBox2_SelectedIndexChanged(object sender, EventArgs e)
         {
             FontSize();
         }
+        #endregion
 
+        #region Timer
         private void timer1_Tick(object sender, EventArgs e)
         {
             if (GetCurrentDocument.Text.Length > 0)
@@ -479,6 +548,120 @@ namespace SendMail
         }
         #endregion
 
+        #region FontAlignment
 
+        private void toolStripButton10_Click(object sender, EventArgs e)
+        {
+            FontTextAlign(HorizontalAlignment.Left);
+        }
+        private void toolStripButton11_Click(object sender, EventArgs e)
+        {
+            FontTextAlign(HorizontalAlignment.Center);
+        }
+        private void toolStripButton12_Click(object sender, EventArgs e)
+        {
+            FontTextAlign(HorizontalAlignment.Right);
+        }
+        #endregion
+
+        #region GetCurrentDocument
+        private void button1_MouseMove(object sender, System.EventArgs e)
+        {
+            // Add event handler code here.  
+            //MessageBox.Show(this, "Test", "Klikanie", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            //Control.MousePosition
+            //PointToClient(Cursor.Position);
+            int pos = GetCurrentDocument.PointToClient(Cursor.Position).X;
+            if (pos < 10)
+            {
+                FunChangeCursor(GetCurrentDocument, Cursors.PanNE);
+            }
+            else
+            {
+                FunChangeCursor(GetCurrentDocument, Cursors.Default);
+            }
+        }
+        private void FunChangeCursor(RichTextBox CurPriv, Cursor CurNext)
+        {
+            if (CurPriv.Cursor != CurNext)
+            {
+                CurPriv.Cursor = CurNext;
+            }
+        }
+        #endregion
+
+        #region Paragraph
+
+
+        private void toolStripButton13_Click(object sender, EventArgs e)
+        {
+            ParagraphNew();
+        }
+
+
+        #endregion
+
+        #endregion
     }
+
+    #region RTBMargin
+
+
+    public static class RichTextBoxExtensions
+    {
+        public static void SetInnerMargins(this TextBoxBase textBox, int left, int top, int right, int bottom)
+        {
+            var rect = textBox.GetFormattingRect();
+
+            var newRect = new Rectangle(left, top, rect.Width - left - right, rect.Height - top - bottom);
+            textBox.SetFormattingRect(newRect);
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        private struct RECT
+        {
+            public readonly int Left;
+            public readonly int Top;
+            public readonly int Right;
+            public readonly int Bottom;
+
+            private RECT(int left, int top, int right, int bottom)
+            {
+                Left = left;
+                Top = top;
+                Right = right;
+                Bottom = bottom;
+            }
+
+            public RECT(Rectangle r) : this(r.Left, r.Top, r.Right, r.Bottom)
+            {
+            }
+        }
+
+        [DllImport(@"User32.dll", EntryPoint = @"SendMessage", CharSet = CharSet.Auto)]
+        private static extern int SendMessageRefRect(IntPtr hWnd, uint msg, int wParam, ref RECT rect);
+
+        [DllImport(@"user32.dll", EntryPoint = @"SendMessage", CharSet = CharSet.Auto)]
+        private static extern int SendMessage(IntPtr hwnd, int wMsg, IntPtr wParam, ref Rectangle lParam);
+
+        private const int EmGetrect = 0xB2;
+        private const int EmSetrect = 0xB3;
+
+        private static void SetFormattingRect(this TextBoxBase textbox, Rectangle rect)
+        {
+            var rc = new RECT(rect);
+            SendMessageRefRect(textbox.Handle, EmSetrect, 0, ref rc);
+        }
+
+        private static Rectangle GetFormattingRect(this TextBoxBase textbox)
+        {
+            var rect = new Rectangle();
+            SendMessage(textbox.Handle, EmGetrect, (IntPtr)0, ref rect);
+            return rect;
+        }
+    }
+    #endregion
 }
+
+
+
