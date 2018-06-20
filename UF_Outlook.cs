@@ -18,6 +18,8 @@ using System.Runtime.InteropServices;
 using System.Net;
 using System.Net.Mail;
 using System.Collections;
+using System.Web;
+
 
 
 namespace SendMail
@@ -47,10 +49,13 @@ namespace SendMail
             mailItem.BodyFormat = Outlook.OlBodyFormat.olFormatHTML;
             //Copy();
             //mailItem.Body = GetCurrentDocument.Text ;
-            mailItem.Body = GetCurrentDocument.Text;
-
+            mailItem.HTMLBody = HtmlConverter(GetCurrentDocument);
+            //
+            //mailItem.HTMLBody  = $"< p >< font color = {ColorConverterExtensions.ToRgbString(GetCurrentDocument.SelectionColor)} > This is some text!</ font ></ p >";
+            //mailItem.HTMLBody = $"<p><span style=color:{ColorConverterExtensions.ToRgbString(GetCurrentDocument.SelectionColor)} > This is some text!</ span ></ p >";
+            //mailItem.HTMLBody = $"<p><font color={ColorConverterExtensions.ToHexString(GetCurrentDocument.SelectionColor)} > This is some text!</font ></p >";
             //GetCurrentDocument.Copy();
-            
+
             //Outlook.Attachment attachment = mailItem.Attachments.Add(@"C:\Users\user\Desktop\kosmos.jpg", Outlook.OlAttachmentType.olEmbeddeditem, null, "Some image display name");
 
             //string imageCid = "kosmos.jpg";
@@ -65,10 +70,10 @@ namespace SendMail
             // , imageCid
             // );
 
+            GetCurrentDocument.Text += mailItem.HTMLBody;
             mailItem.Display();
-            
 
-            MetroMessageBox.Show(this, "Cześć kotek", "Aplikacja do wysyłania Mail", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            //MetroMessageBox.Show(this, "Cześć kotek", "Aplikacja do wysyłania Mail", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
         }
 
@@ -97,7 +102,214 @@ namespace SendMail
 
             //RichTextBoxMargin = rect;
 
+            string htmlstr = "";
+
+            GetCurrentDocument.Text = GetCurrentDocument.Text + Environment.NewLine + htmlstr;
+
         }
+
+        #region HtmlConvert
+        private string HtmlConverter(RichTextBox rtb)
+        {
+
+            byte R, G, B;
+
+            string BackCorAtual = "";
+            string BackCorAnterior = "";
+
+            string CorAtual = "";
+            string CorAnterior = "";
+
+            string FontAtual = "";
+            string FontAnterior = "";
+
+            float TamantoAtual = 0;
+            float TamantoAnterior = 0;
+
+            //FontStyle EstiloAtual = 0;
+            //FontStyle EstilAnterior = 0;
+            FontStyle FontStylePriv = 0;
+            FontStyle FontStyleAktual = 0;
+            List<string> listEnds = new List<string>();
+
+            string htmlBody = "";
+            int Spam = 0;
+
+            for (int i = 0; i < rtb.Text.Length; i++)
+            {
+                rtb.Select(i, 1);
+                if (rtb.SelectedText == "\n")
+                {
+                    htmlBody += "<br>";
+                }
+                else
+                {
+                    if (rtb.SelectedText != "")
+                    {
+                        R = rtb.SelectionColor.R;
+                        G = rtb.SelectionColor.G;
+                        B = rtb.SelectionColor.B;
+                        CorAtual = ColorConverterExtensions.ToHexString(rtb.SelectionColor);
+
+                        R = rtb.SelectionBackColor.R;
+                        G = rtb.SelectionBackColor.G;
+                        B = rtb.SelectionBackColor.B;
+                        BackCorAtual = ColorConverterExtensions.ToHexString(rtb.SelectionBackColor);
+
+                        FontAtual = rtb.SelectionFont.Name;
+                        TamantoAtual = rtb.SelectionFont.Size;
+                        FontStyleAktual = rtb.SelectionFont.Style;
+
+                        //color
+                        if (CorAtual != CorAnterior)
+                        {
+                            htmlBody += "<span style=color:" + CorAtual + ">";
+                            Spam += 1;
+                        }
+                        //background
+                        if (BackCorAtual != BackCorAnterior)
+                        {
+                            htmlBody += "<span style=background-color:" + BackCorAtual + ">";
+                            Spam += 1;
+                        }
+                        //Font
+                        if (FontAtual != FontAnterior)
+                        {
+                            htmlBody += "<span style=font:" + FontAtual + ">";
+                            Spam += 1;
+                        }
+                        //Size
+                        if (TamantoAtual != TamantoAnterior)
+                        {
+                            htmlBody += "<span style=font-size:" + TamantoAtual + ">";
+                            Spam += 1;
+                        }
+                        //foreach (FontStyle fs in Style)
+                        //{
+                        //    // FontFamily.Source contains the font family name.
+
+                        //}
+                        if (FontStylePriv != FontStyleAktual)
+                        {
+                            if (listEnds.Count != 0)
+                            {
+                                foreach (string item in listEnds)
+                                {
+                                    htmlBody += item;
+                                }
+                                listEnds.Clear();
+                            }
+
+                            foreach (FontStyle fs in Enum.GetValues(typeof(FontStyle)))
+                            {
+                                // ...
+                                if (FontStyleAktual.ToString().Contains(fs.ToString()))
+                                {
+                                    GetFontStyle(fs, out string sBegin, out string sEnd);
+                                    htmlBody += sBegin;
+                                    listEnds.Add(sEnd);
+                                }
+                            }
+                        }
+
+                        htmlBody += rtb.SelectedText;
+
+                        //set previous variable
+                        TamantoAnterior = TamantoAtual;
+                        FontAnterior = FontAtual;
+                        CorAnterior = CorAtual;
+                        BackCorAnterior = BackCorAtual;
+                        FontStylePriv = FontStyleAktual;
+
+                    }
+
+                }
+
+            }
+
+            //Final spam
+            for (int i = 0; i < Spam; i++)
+            {
+                htmlBody += "</span>";
+            }
+            htmlBody += "</div>";
+
+            return htmlBody;
+
+        }
+
+        private string HTML_RGBHex(byte R, byte G, byte B)
+        {
+            object HexR, HexB, HexG = new object();
+
+            HexR = string.Format("{0:X}", R);
+            if (HexR.ToString().Length < 2) { HexR = "0" + HexR; }
+
+
+            HexB = string.Format("{0:X}", R);
+            if (HexB.ToString().Length < 2) { HexB = "0" + HexR; }
+
+            HexG = string.Format("{0:X}", R);
+            if (HexG.ToString().Length < 2) { HexG = "0" + HexR; }
+
+            //return "\"#ff0000\""; //"" + "rgb(201, 76, 76)" + """"; //"rgb(0, 191, 255)";
+            return "\"#" + HexR + HexG + HexB + "\"";
+        }
+
+        private void GetFontStyle(FontStyle fs, out string sBegin, out string sEnd)
+        {
+            switch (fs)
+            {
+                case FontStyle.Bold:
+                    sBegin = "<strong>";
+                    sEnd = "</strong>";
+                    break;
+                case FontStyle.Italic:
+                    sBegin = "<em>";
+                    sEnd = "</em>";
+                    break;
+                case FontStyle.Underline:
+                    sBegin = "<u>";
+                    sEnd = "</u>";
+                    break;
+                case FontStyle.Strikeout:
+                    sBegin = "<strike>";
+                    sEnd = "</strike>";
+                    break;
+                default:
+                    sBegin = "";
+                    sEnd = "";
+                    break;
+            }
+            //switch (EstiloAtual)
+            //{
+            //    case FontStyle.Regular:
+            //        break;
+            //    case FontStyle.Bold:
+            //        htmlBody += "<strong>" + rtb.SelectedText + "</strong>";
+            //        break;
+            //    case FontStyle.Italic:
+            //        htmlBody += "<em>" + rtb.SelectedText + "</em>";
+            //        break;
+            //    case FontStyle.Underline:
+            //        htmlBody += "<u>" + rtb.SelectedText + "</u>";
+            //        break;
+            //    case FontStyle.Strikeout:
+            //        htmlBody += "<strike>" + rtb.SelectedText + "</strike>";
+            //        break;
+            //    default:
+            //        htmlBody += rtb.SelectedText;
+            //        break;
+            //}
+        }
+
+
+        #endregion
+
+
+
+
+
 
         private int TabCount = 0;
         #region Methods
@@ -661,7 +873,15 @@ namespace SendMail
         }
     }
     #endregion
+
+    public static class ColorConverterExtensions
+    {
+        public static string ToHexString(this Color c) => $"#{c.R:X2}{c.G:X2}{c.B:X2}";
+
+        public static string ToRgbString(this Color c) => $"RGB({c.R}, {c.G}, {c.B})";
+    }
 }
+
 
 
 
